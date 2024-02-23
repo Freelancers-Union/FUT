@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mikestefanello/pagoda/pkg/controller"
+	"github.com/mikestefanello/pagoda/pkg/views/index"
 	"github.com/mikestefanello/pagoda/templates"
 
 	"github.com/labstack/echo/v4"
@@ -21,6 +22,7 @@ type (
 )
 
 func (c *home) Get(ctx echo.Context) error {
+	return index.Index().Render(ctx.Request().Context(), ctx.Response())
 	page := controller.NewPage(ctx)
 	page.Layout = templates.LayoutMain
 	page.Name = templates.PageHome

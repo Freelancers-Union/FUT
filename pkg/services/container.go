@@ -33,26 +33,14 @@ type Container struct {
 	// Config stores the application configuration
 	Config *config.Config
 
-	// Cache contains the cache client
-	Cache *CacheClient
-
 	// Database stores the connection to the database
 	Database *sql.DB
 
 	// ORM stores a client to the ORM
 	ORM *ent.Client
 
-	// Mail stores an email sending client
-	Mail *MailClient
-
-	// Auth stores an authentication client
-	Auth *AuthClient
-
 	// TemplateRenderer stores a service to easily render and cache templates
 	TemplateRenderer *TemplateRenderer
-
-	// Tasks stores the task client
-	Tasks *TaskClient
 }
 
 // NewContainer creates and initializes a new Container
@@ -61,24 +49,14 @@ func NewContainer() *Container {
 	c.initConfig()
 	c.initValidator()
 	c.initWeb()
-	c.initCache()
 	c.initDatabase()
 	c.initORM()
-	c.initAuth()
 	c.initTemplateRenderer()
-	c.initMail()
-	c.initTasks()
 	return c
 }
 
 // Shutdown shuts the Container down and disconnects all connections
 func (c *Container) Shutdown() error {
-	if err := c.Tasks.Close(); err != nil {
-		return err
-	}
-	if err := c.Cache.Close(); err != nil {
-		return err
-	}
 	if err := c.ORM.Close(); err != nil {
 		return err
 	}
@@ -116,14 +94,6 @@ func (c *Container) initWeb() {
 	}
 
 	c.Web.Validator = c.Validator
-}
-
-// initCache initializes the cache
-func (c *Container) initCache() {
-	var err error
-	if c.Cache, err = NewCacheClient(c.Config); err != nil {
-		panic(err)
-	}
 }
 
 // initDatabase initializes the database
@@ -176,26 +146,7 @@ func (c *Container) initORM() {
 	}
 }
 
-// initAuth initializes the authentication client
-func (c *Container) initAuth() {
-	c.Auth = NewAuthClient(c.Config, c.ORM)
-}
-
 // initTemplateRenderer initializes the template renderer
 func (c *Container) initTemplateRenderer() {
 	c.TemplateRenderer = NewTemplateRenderer(c.Config)
-}
-
-// initMail initialize the mail client
-func (c *Container) initMail() {
-	var err error
-	c.Mail, err = NewMailClient(c.Config, c.TemplateRenderer)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create mail client: %v", err))
-	}
-}
-
-// initTasks initializes the task client
-func (c *Container) initTasks() {
-	c.Tasks = NewTaskClient(c.Config)
 }

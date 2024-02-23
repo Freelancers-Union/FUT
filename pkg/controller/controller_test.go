@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/mikestefanello/pagoda/config"
 	"github.com/mikestefanello/pagoda/pkg/htmx"
-	"github.com/mikestefanello/pagoda/pkg/middleware"
 	"github.com/mikestefanello/pagoda/pkg/services"
 	"github.com/mikestefanello/pagoda/pkg/tests"
 	"github.com/mikestefanello/pagoda/templates"
@@ -145,44 +143,4 @@ func TestController_RenderPage(t *testing.T) {
 		assert.Empty(t, expectedTemplates)
 	})
 
-	t.Run("page cache", func(t *testing.T) {
-		ctx, rec, ctr, p := setup()
-		p.Cache.Enabled = true
-		p.Cache.Tags = []string{"tag1"}
-		err := ctr.RenderPage(ctx, p)
-		require.NoError(t, err)
-
-		// Fetch from the cache
-		res, err := c.Cache.
-			Get().
-			Group(middleware.CachedPageGroup).
-			Key(p.URL).
-			Type(new(middleware.CachedPage)).
-			Fetch(context.Background())
-		require.NoError(t, err)
-
-		// Compare the cached page
-		cp, ok := res.(*middleware.CachedPage)
-		require.True(t, ok)
-		assert.Equal(t, p.URL, cp.URL)
-		assert.Equal(t, p.Headers, cp.Headers)
-		assert.Equal(t, p.StatusCode, cp.StatusCode)
-		assert.Equal(t, rec.Body.Bytes(), cp.HTML)
-
-		// Clear the tag
-		err = c.Cache.
-			Flush().
-			Tags(p.Cache.Tags[0]).
-			Execute(context.Background())
-		require.NoError(t, err)
-
-		// Refetch from the cache and expect no results
-		_, err = c.Cache.
-			Get().
-			Group(middleware.CachedPageGroup).
-			Key(p.URL).
-			Type(new(middleware.CachedPage)).
-			Fetch(context.Background())
-		assert.Error(t, err)
-	})
 }

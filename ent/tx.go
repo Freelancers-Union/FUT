@@ -12,10 +12,12 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// PasswordToken is the client for interacting with the PasswordToken builders.
-	PasswordToken *PasswordTokenClient
-	// User is the client for interacting with the User builders.
-	User *UserClient
+	// Character is the client for interacting with the Character builders.
+	Character *CharacterClient
+	// Outfit is the client for interacting with the Outfit builders.
+	Outfit *OutfitClient
+	// Ribbon is the client for interacting with the Ribbon builders.
+	Ribbon *RibbonClient
 
 	// lazily loaded.
 	client     *Client
@@ -147,8 +149,9 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.PasswordToken = NewPasswordTokenClient(tx.config)
-	tx.User = NewUserClient(tx.config)
+	tx.Character = NewCharacterClient(tx.config)
+	tx.Outfit = NewOutfitClient(tx.config)
+	tx.Ribbon = NewRibbonClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -158,7 +161,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: PasswordToken.QueryXXX(), the query will be executed
+// applies a query, for example: Character.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

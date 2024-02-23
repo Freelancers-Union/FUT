@@ -8,49 +8,85 @@ import (
 )
 
 var (
-	// PasswordTokensColumns holds the columns for the "password_tokens" table.
-	PasswordTokensColumns = []*schema.Column{
+	// CharactersColumns holds the columns for the "characters" table.
+	CharactersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "hash", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "password_token_user", Type: field.TypeInt},
+		{Name: "character_id", Type: field.TypeUint64, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "faction_id", Type: field.TypeUint8},
+		{Name: "date_created", Type: field.TypeTime},
+		{Name: "outfit_characters", Type: field.TypeUint64, Nullable: true},
 	}
-	// PasswordTokensTable holds the schema information for the "password_tokens" table.
-	PasswordTokensTable = &schema.Table{
-		Name:       "password_tokens",
-		Columns:    PasswordTokensColumns,
-		PrimaryKey: []*schema.Column{PasswordTokensColumns[0]},
+	// CharactersTable holds the schema information for the "characters" table.
+	CharactersTable = &schema.Table{
+		Name:       "characters",
+		Columns:    CharactersColumns,
+		PrimaryKey: []*schema.Column{CharactersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "password_tokens_users_user",
-				Columns:    []*schema.Column{PasswordTokensColumns[3]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
+				Symbol:     "characters_outfits_characters",
+				Columns:    []*schema.Column{CharactersColumns[5]},
+				RefColumns: []*schema.Column{OutfitsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "character_character_id",
+				Unique:  false,
+				Columns: []*schema.Column{CharactersColumns[1]},
+			},
+			{
+				Name:    "character_name",
+				Unique:  false,
+				Columns: []*schema.Column{CharactersColumns[2]},
 			},
 		},
 	}
-	// UsersColumns holds the columns for the "users" table.
-	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+	// OutfitsColumns holds the columns for the "outfits" table.
+	OutfitsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUint64, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "password", Type: field.TypeString},
-		{Name: "verified", Type: field.TypeBool, Default: false},
-		{Name: "created_at", Type: field.TypeTime},
+		{Name: "tag", Type: field.TypeString},
+		{Name: "faction", Type: field.TypeUint8},
 	}
-	// UsersTable holds the schema information for the "users" table.
-	UsersTable = &schema.Table{
-		Name:       "users",
-		Columns:    UsersColumns,
-		PrimaryKey: []*schema.Column{UsersColumns[0]},
+	// OutfitsTable holds the schema information for the "outfits" table.
+	OutfitsTable = &schema.Table{
+		Name:       "outfits",
+		Columns:    OutfitsColumns,
+		PrimaryKey: []*schema.Column{OutfitsColumns[0]},
+	}
+	// RibbonsColumns holds the columns for the "ribbons" table.
+	RibbonsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "timestamp", Type: field.TypeTime},
+		{Name: "ribbon_id", Type: field.TypeInt},
+		{Name: "ribbon_count", Type: field.TypeInt},
+		{Name: "character_ribbons", Type: field.TypeInt, Unique: true, Nullable: true},
+	}
+	// RibbonsTable holds the schema information for the "ribbons" table.
+	RibbonsTable = &schema.Table{
+		Name:       "ribbons",
+		Columns:    RibbonsColumns,
+		PrimaryKey: []*schema.Column{RibbonsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "ribbons_characters_ribbons",
+				Columns:    []*schema.Column{RibbonsColumns[4]},
+				RefColumns: []*schema.Column{CharactersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		PasswordTokensTable,
-		UsersTable,
+		CharactersTable,
+		OutfitsTable,
+		RibbonsTable,
 	}
 )
 
 func init() {
-	PasswordTokensTable.ForeignKeys[0].RefTable = UsersTable
+	CharactersTable.ForeignKeys[0].RefTable = OutfitsTable
+	RibbonsTable.ForeignKeys[0].RefTable = CharactersTable
 }

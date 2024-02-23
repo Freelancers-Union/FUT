@@ -65,11 +65,6 @@ func request(t *testing.T) *httpRequest {
 	return &r
 }
 
-func (h *httpRequest) setClient(client http.Client) *httpRequest {
-	h.client = client
-	return h
-}
-
 func (h *httpRequest) setRoute(route string, params ...any) *httpRequest {
 	h.route = srv.URL + c.Web.Reverse(route, params)
 	return h

@@ -6,8 +6,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// PasswordToken is the predicate function for passwordtoken builders.
-type PasswordToken func(*sql.Selector)
+// Character is the predicate function for character builders.
+type Character func(*sql.Selector)
 
-// User is the predicate function for user builders.
-type User func(*sql.Selector)
+// Outfit is the predicate function for outfit builders.
+type Outfit func(*sql.Selector)
+
+// Ribbon is the predicate function for ribbon builders.
+type Ribbon func(*sql.Selector)

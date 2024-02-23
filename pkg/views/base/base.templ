@@ -1,0 +1,76 @@
+package base
+
+import (
+	"time"
+	"fmt"
+)
+
+templ Base() {
+	<html lang="en" data-bs-theme="dark">
+		<head>
+			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+			<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+			<link rel="apple-touch-icon" sizes="180x180" href="files/apple-touch-icon.png"/>
+			<link rel="icon" type="image/png" sizes="32x32" href="files/favicon-32x32.png"/>
+			<link rel="icon" type="image/png" sizes="16x16" href="files/favicon-16x16.png"/>
+			<link rel="manifest" href="/files/site.webmanifest"/>
+			<style>
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .content {
+        flex: 1 0 auto;
+      }
+      .footer {
+        flex-shrink: 0;
+      }
+    </style>
+		</head>
+		<body>
+			<container>
+				{ children... }
+			</container>
+			<div class="container">
+				<footer class="d-flex flex-wrap justify-content-between align-items-center py-2 my-1 border-top">
+					<p class="col-md-4 mb-0 text-body-secondary small">Copyright © { fmt.Sprintf("%d", time.Now().Year()) } Karlis (aka Karlish)</p>
+					<a href="https://fugaming.org" class="col-md-4 d-flex align-items-center justify-content-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+						<img src="https://www.fugaming.org/uploads/pslogo1417p.png?1617516785" title="FU Gaming" width="30" height="30"/>
+					</a>
+					<ul class="nav col-md-4 justify-content-end">
+						<li class="nav-item">
+							<a href="/" class="nav-link px-2 text-body-secondary">Home</a>
+						</li>
+						<li class="ms-5 nav-item">
+							<a class="align-middle" title="Temaspeak" href="ts3server://ts.fugaming.org?password=futs">
+								<svg class="align-bottom" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#2880c3" viewBox="0 0 16 16">
+									<path
+										d="M16 9.127v-1.6c0-.55-.55-.95-.825-1.1-.1-.05-.15-.15-.175-.25-.2-1.1-.65-2.1-1.275-2.976-.05-.075-.05-.175.025-.25h0c.1-.075.1-.225.025-.3C12.4 1 10.3 0 8 0S3.575 1 2.2 2.651c-.075.1-.075.225.025.3l.025.025c.075.075.075.175.025.25-.65.85-1.075 1.85-1.275 2.95-.025.1-.075.2-.175.25C.55 6.577 0 6.977 0 7.527v1.6s-.025 1.45 1.5 1.45c0 0 .475.1.475-.5V7.451C1.975 4.126 4.675 1.4 8 1.4s6.025 2.701 6.025 6.051h0v2.626c0 .575.475.5.475.5 1.525 0 1.5-1.45 1.5-1.45zm-2.25 2.551S13.1 14.879 8 15.354c0 0-2.15.175-.475.5s5.6.275 6.65-1.925c0 0 .575-.875.025-2.351 0 0-.225-.475-.45.1zm-8.8-.025s-1.35-.025-1.7-1.6.175-2.251.575-2.351 1.6.1 3.375 2.251c1.675 2-2.25 1.7-2.25 1.7zm4.375-.05s-1.45-.525-.25-1.4 3.25-1.55 3.675-.625c.4.925-.425 1.975-.875 2.1-.425.15-.975.325-2.55-.075z"
+									></path>
+								</svg>
+							</a>
+						</li>
+						<li class="ms-3 nav-item">
+							<a class="text-body-secondary align-middle pt-1" title="Discord" href="https://discord.gg/the-freelancers-union-282514718445273089" target="_blank">
+								<svg xclass="align-bottom" mlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-discord" viewBox="0 0 16 16">
+									<path d="M13.545 2.907a13.2 13.2 0 0 0-3.257-1.011.05.05 0 0 0-.052.025c-.141.25-.297.577-.406.833a12.2 12.2 0 0 0-3.658 0 8 8 0 0 0-.412-.833.05.05 0 0 0-.052-.025c-1.125.194-2.22.534-3.257 1.011a.04.04 0 0 0-.021.018C.356 6.024-.213 9.047.066 12.032q.003.022.021.037a13.3 13.3 0 0 0 3.995 2.02.05.05 0 0 0 .056-.019q.463-.63.818-1.329a.05.05 0 0 0-.01-.059l-.018-.011a9 9 0 0 1-1.248-.595.05.05 0 0 1-.02-.066l.015-.019q.127-.095.248-.195a.05.05 0 0 1 .051-.007c2.619 1.196 5.454 1.196 8.041 0a.05.05 0 0 1 .053.007q.121.1.248.195a.05.05 0 0 1-.004.085 8 8 0 0 1-1.249.594.05.05 0 0 0-.03.03.05.05 0 0 0 .003.041c.24.465.515.909.817 1.329a.05.05 0 0 0 .056.019 13.2 13.2 0 0 0 4.001-2.02.05.05 0 0 0 .021-.037c.334-3.451-.559-6.449-2.366-9.106a.03.03 0 0 0-.02-.019m-8.198 7.307c-.789 0-1.438-.724-1.438-1.612s.637-1.613 1.438-1.613c.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612m5.316 0c-.788 0-1.438-.724-1.438-1.612s.637-1.613 1.438-1.613c.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612"></path>
+								</svg>
+							</a>
+						</li>
+						<li class="ms-3 nav-item">
+							<a class="text-body-secondary align-middle" title="GitHub" href="https://github.com/Freelancers-Union/FUT" target="_blank">
+								<svg class="align-bottom" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+									<path
+										fill-rule="evenodd"
+										d="M8 0C3.582 0 0 3.582 0 8c0 3.535 2.29 6.533 5.47 7.59.4.074.547-.174.547-.387 0-.19-.007-.693-.01-1.36-2.224.483-2.693-1.072-2.693-1.072-.364-.925-.888-1.17-.888-1.17-.726-.497.055-.487.055-.487.803.057 1.226.825 1.226.825.714 1.22 1.874.868 2.33.663.072-.517.28-.868.508-1.068-1.777-.2-3.644-.888-3.644-3.953 0-.872.31-1.586.823-2.144-.083-.202-.356-1.015.078-2.116 0 0 .67-.215 2.2.82.638-.178 1.318-.267 2-.27.68.003 1.362.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.435 1.1.162 1.913.08 2.116.51.558.82 1.272.82 2.144 0 3.073-1.87 3.75-3.65 3.947.287.248.543.733.543 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8z"
+									></path>
+								</svg>
+							</a>
+						</li>
+					</ul>
+				</footer>
+			</div>
+		</body>
+	</html>
+}

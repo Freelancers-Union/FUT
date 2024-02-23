@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mikestefanello/pagoda/ent"
-	"github.com/mikestefanello/pagoda/pkg/context"
 	"github.com/mikestefanello/pagoda/pkg/htmx"
 	"github.com/mikestefanello/pagoda/pkg/msg"
 	"github.com/mikestefanello/pagoda/templates"
@@ -66,12 +64,6 @@ type Page struct {
 
 	// IsHome stores whether the requested page is the home page or not
 	IsHome bool
-
-	// IsAuth stores whether or not the user is authenticated
-	IsAuth bool
-
-	// AuthUser stores the authenticated user
-	AuthUser *ent.User
 
 	// StatusCode stores the HTTP status code that will be returned
 	StatusCode int
@@ -138,11 +130,6 @@ func NewPage(ctx echo.Context) Page {
 
 	if csrf := ctx.Get(echomw.DefaultCSRFConfig.ContextKey); csrf != nil {
 		p.CSRF = csrf.(string)
-	}
-
-	if u := ctx.Get(context.AuthenticatedUserKey); u != nil {
-		p.IsAuth = true
-		p.AuthUser = u.(*ent.User)
 	}
 
 	p.HTMX.Request = htmx.GetRequest(ctx)

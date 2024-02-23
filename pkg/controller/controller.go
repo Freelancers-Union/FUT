@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mikestefanello/pagoda/pkg/context"
 	"github.com/mikestefanello/pagoda/pkg/htmx"
-	"github.com/mikestefanello/pagoda/pkg/middleware"
 	"github.com/mikestefanello/pagoda/pkg/services"
 	"github.com/mikestefanello/pagoda/templates"
 
@@ -91,53 +89,8 @@ func (c *Controller) RenderPage(ctx echo.Context, page Page) error {
 	}
 
 	// Cache this page, if caching was enabled
-	c.cachePage(ctx, page, buf)
 
 	return ctx.HTMLBlob(ctx.Response().Status, buf.Bytes())
-}
-
-// cachePage caches the HTML for a given Page if the Page has caching enabled
-func (c *Controller) cachePage(ctx echo.Context, page Page, html *bytes.Buffer) {
-	if !page.Cache.Enabled || page.IsAuth {
-		return
-	}
-
-	// If no expiration time was provided, default to the configuration value
-	if page.Cache.Expiration == 0 {
-		page.Cache.Expiration = c.Container.Config.Cache.Expiration.Page
-	}
-
-	// Extract the headers
-	headers := make(map[string]string)
-	for k, v := range ctx.Response().Header() {
-		headers[k] = v[0]
-	}
-
-	// The request URL is used as the cache key so the middleware can serve the
-	// cached page on matching requests
-	key := ctx.Request().URL.String()
-	cp := middleware.CachedPage{
-		URL:        key,
-		HTML:       html.Bytes(),
-		Headers:    headers,
-		StatusCode: ctx.Response().Status,
-	}
-
-	err := c.Container.Cache.
-		Set().
-		Group(middleware.CachedPageGroup).
-		Key(key).
-		Tags(page.Cache.Tags...).
-		Expiration(page.Cache.Expiration).
-		Data(cp).
-		Save(ctx.Request().Context())
-
-	switch {
-	case err == nil:
-		ctx.Logger().Info("cached page")
-	case !context.IsCanceledError(err):
-		ctx.Logger().Errorf("failed to cache page: %v", err)
-	}
 }
 
 // Redirect redirects to a given route name with optional route parameters

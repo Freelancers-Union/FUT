@@ -15,8 +15,9 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/mikestefanello/pagoda/ent/passwordtoken"
-	"github.com/mikestefanello/pagoda/ent/user"
+	"github.com/mikestefanello/pagoda/ent/character"
+	"github.com/mikestefanello/pagoda/ent/outfit"
+	"github.com/mikestefanello/pagoda/ent/ribbon"
 )
 
 // Client is the client that holds all ent builders.
@@ -24,10 +25,12 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
-	// PasswordToken is the client for interacting with the PasswordToken builders.
-	PasswordToken *PasswordTokenClient
-	// User is the client for interacting with the User builders.
-	User *UserClient
+	// Character is the client for interacting with the Character builders.
+	Character *CharacterClient
+	// Outfit is the client for interacting with the Outfit builders.
+	Outfit *OutfitClient
+	// Ribbon is the client for interacting with the Ribbon builders.
+	Ribbon *RibbonClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -39,8 +42,9 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
-	c.PasswordToken = NewPasswordTokenClient(c.config)
-	c.User = NewUserClient(c.config)
+	c.Character = NewCharacterClient(c.config)
+	c.Outfit = NewOutfitClient(c.config)
+	c.Ribbon = NewRibbonClient(c.config)
 }
 
 type (
@@ -131,10 +135,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		PasswordToken: NewPasswordTokenClient(cfg),
-		User:          NewUserClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		Character: NewCharacterClient(cfg),
+		Outfit:    NewOutfitClient(cfg),
+		Ribbon:    NewRibbonClient(cfg),
 	}, nil
 }
 
@@ -152,17 +157,18 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		PasswordToken: NewPasswordTokenClient(cfg),
-		User:          NewUserClient(cfg),
+		ctx:       ctx,
+		config:    cfg,
+		Character: NewCharacterClient(cfg),
+		Outfit:    NewOutfitClient(cfg),
+		Ribbon:    NewRibbonClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		PasswordToken.
+//		Character.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -184,130 +190,134 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.PasswordToken.Use(hooks...)
-	c.User.Use(hooks...)
+	c.Character.Use(hooks...)
+	c.Outfit.Use(hooks...)
+	c.Ribbon.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.PasswordToken.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	c.Character.Intercept(interceptors...)
+	c.Outfit.Intercept(interceptors...)
+	c.Ribbon.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
-	case *PasswordTokenMutation:
-		return c.PasswordToken.mutate(ctx, m)
-	case *UserMutation:
-		return c.User.mutate(ctx, m)
+	case *CharacterMutation:
+		return c.Character.mutate(ctx, m)
+	case *OutfitMutation:
+		return c.Outfit.mutate(ctx, m)
+	case *RibbonMutation:
+		return c.Ribbon.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
 }
 
-// PasswordTokenClient is a client for the PasswordToken schema.
-type PasswordTokenClient struct {
+// CharacterClient is a client for the Character schema.
+type CharacterClient struct {
 	config
 }
 
-// NewPasswordTokenClient returns a client for the PasswordToken from the given config.
-func NewPasswordTokenClient(c config) *PasswordTokenClient {
-	return &PasswordTokenClient{config: c}
+// NewCharacterClient returns a client for the Character from the given config.
+func NewCharacterClient(c config) *CharacterClient {
+	return &CharacterClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `passwordtoken.Hooks(f(g(h())))`.
-func (c *PasswordTokenClient) Use(hooks ...Hook) {
-	c.hooks.PasswordToken = append(c.hooks.PasswordToken, hooks...)
+// A call to `Use(f, g, h)` equals to `character.Hooks(f(g(h())))`.
+func (c *CharacterClient) Use(hooks ...Hook) {
+	c.hooks.Character = append(c.hooks.Character, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `passwordtoken.Intercept(f(g(h())))`.
-func (c *PasswordTokenClient) Intercept(interceptors ...Interceptor) {
-	c.inters.PasswordToken = append(c.inters.PasswordToken, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `character.Intercept(f(g(h())))`.
+func (c *CharacterClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Character = append(c.inters.Character, interceptors...)
 }
 
-// Create returns a builder for creating a PasswordToken entity.
-func (c *PasswordTokenClient) Create() *PasswordTokenCreate {
-	mutation := newPasswordTokenMutation(c.config, OpCreate)
-	return &PasswordTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Character entity.
+func (c *CharacterClient) Create() *CharacterCreate {
+	mutation := newCharacterMutation(c.config, OpCreate)
+	return &CharacterCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of PasswordToken entities.
-func (c *PasswordTokenClient) CreateBulk(builders ...*PasswordTokenCreate) *PasswordTokenCreateBulk {
-	return &PasswordTokenCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Character entities.
+func (c *CharacterClient) CreateBulk(builders ...*CharacterCreate) *CharacterCreateBulk {
+	return &CharacterCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *PasswordTokenClient) MapCreateBulk(slice any, setFunc func(*PasswordTokenCreate, int)) *PasswordTokenCreateBulk {
+func (c *CharacterClient) MapCreateBulk(slice any, setFunc func(*CharacterCreate, int)) *CharacterCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &PasswordTokenCreateBulk{err: fmt.Errorf("calling to PasswordTokenClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &CharacterCreateBulk{err: fmt.Errorf("calling to CharacterClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*PasswordTokenCreate, rv.Len())
+	builders := make([]*CharacterCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &PasswordTokenCreateBulk{config: c.config, builders: builders}
+	return &CharacterCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for PasswordToken.
-func (c *PasswordTokenClient) Update() *PasswordTokenUpdate {
-	mutation := newPasswordTokenMutation(c.config, OpUpdate)
-	return &PasswordTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Character.
+func (c *CharacterClient) Update() *CharacterUpdate {
+	mutation := newCharacterMutation(c.config, OpUpdate)
+	return &CharacterUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *PasswordTokenClient) UpdateOne(pt *PasswordToken) *PasswordTokenUpdateOne {
-	mutation := newPasswordTokenMutation(c.config, OpUpdateOne, withPasswordToken(pt))
-	return &PasswordTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *CharacterClient) UpdateOne(ch *Character) *CharacterUpdateOne {
+	mutation := newCharacterMutation(c.config, OpUpdateOne, withCharacter(ch))
+	return &CharacterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *PasswordTokenClient) UpdateOneID(id int) *PasswordTokenUpdateOne {
-	mutation := newPasswordTokenMutation(c.config, OpUpdateOne, withPasswordTokenID(id))
-	return &PasswordTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *CharacterClient) UpdateOneID(id int) *CharacterUpdateOne {
+	mutation := newCharacterMutation(c.config, OpUpdateOne, withCharacterID(id))
+	return &CharacterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for PasswordToken.
-func (c *PasswordTokenClient) Delete() *PasswordTokenDelete {
-	mutation := newPasswordTokenMutation(c.config, OpDelete)
-	return &PasswordTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Character.
+func (c *CharacterClient) Delete() *CharacterDelete {
+	mutation := newCharacterMutation(c.config, OpDelete)
+	return &CharacterDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *PasswordTokenClient) DeleteOne(pt *PasswordToken) *PasswordTokenDeleteOne {
-	return c.DeleteOneID(pt.ID)
+func (c *CharacterClient) DeleteOne(ch *Character) *CharacterDeleteOne {
+	return c.DeleteOneID(ch.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PasswordTokenClient) DeleteOneID(id int) *PasswordTokenDeleteOne {
-	builder := c.Delete().Where(passwordtoken.ID(id))
+func (c *CharacterClient) DeleteOneID(id int) *CharacterDeleteOne {
+	builder := c.Delete().Where(character.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &PasswordTokenDeleteOne{builder}
+	return &CharacterDeleteOne{builder}
 }
 
-// Query returns a query builder for PasswordToken.
-func (c *PasswordTokenClient) Query() *PasswordTokenQuery {
-	return &PasswordTokenQuery{
+// Query returns a query builder for Character.
+func (c *CharacterClient) Query() *CharacterQuery {
+	return &CharacterQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypePasswordToken},
+		ctx:    &QueryContext{Type: TypeCharacter},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a PasswordToken entity by its id.
-func (c *PasswordTokenClient) Get(ctx context.Context, id int) (*PasswordToken, error) {
-	return c.Query().Where(passwordtoken.ID(id)).Only(ctx)
+// Get returns a Character entity by its id.
+func (c *CharacterClient) Get(ctx context.Context, id int) (*Character, error) {
+	return c.Query().Where(character.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *PasswordTokenClient) GetX(ctx context.Context, id int) *PasswordToken {
+func (c *CharacterClient) GetX(ctx context.Context, id int) *Character {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -315,148 +325,164 @@ func (c *PasswordTokenClient) GetX(ctx context.Context, id int) *PasswordToken {
 	return obj
 }
 
-// QueryUser queries the user edge of a PasswordToken.
-func (c *PasswordTokenClient) QueryUser(pt *PasswordToken) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
+// QueryOutfit queries the outfit edge of a Character.
+func (c *CharacterClient) QueryOutfit(ch *Character) *OutfitQuery {
+	query := (&OutfitClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pt.ID
+		id := ch.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(passwordtoken.Table, passwordtoken.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, passwordtoken.UserTable, passwordtoken.UserColumn),
+			sqlgraph.From(character.Table, character.FieldID, id),
+			sqlgraph.To(outfit.Table, outfit.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, character.OutfitTable, character.OutfitColumn),
 		)
-		fromV = sqlgraph.Neighbors(pt.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRibbons queries the ribbons edge of a Character.
+func (c *CharacterClient) QueryRibbons(ch *Character) *RibbonQuery {
+	query := (&RibbonClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ch.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(character.Table, character.FieldID, id),
+			sqlgraph.To(ribbon.Table, ribbon.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, character.RibbonsTable, character.RibbonsColumn),
+		)
+		fromV = sqlgraph.Neighbors(ch.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *PasswordTokenClient) Hooks() []Hook {
-	return c.hooks.PasswordToken
+func (c *CharacterClient) Hooks() []Hook {
+	return c.hooks.Character
 }
 
 // Interceptors returns the client interceptors.
-func (c *PasswordTokenClient) Interceptors() []Interceptor {
-	return c.inters.PasswordToken
+func (c *CharacterClient) Interceptors() []Interceptor {
+	return c.inters.Character
 }
 
-func (c *PasswordTokenClient) mutate(ctx context.Context, m *PasswordTokenMutation) (Value, error) {
+func (c *CharacterClient) mutate(ctx context.Context, m *CharacterMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&PasswordTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&CharacterCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&PasswordTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&CharacterUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&PasswordTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&CharacterUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&PasswordTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&CharacterDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown PasswordToken mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Character mutation op: %q", m.Op())
 	}
 }
 
-// UserClient is a client for the User schema.
-type UserClient struct {
+// OutfitClient is a client for the Outfit schema.
+type OutfitClient struct {
 	config
 }
 
-// NewUserClient returns a client for the User from the given config.
-func NewUserClient(c config) *UserClient {
-	return &UserClient{config: c}
+// NewOutfitClient returns a client for the Outfit from the given config.
+func NewOutfitClient(c config) *OutfitClient {
+	return &OutfitClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `user.Hooks(f(g(h())))`.
-func (c *UserClient) Use(hooks ...Hook) {
-	c.hooks.User = append(c.hooks.User, hooks...)
+// A call to `Use(f, g, h)` equals to `outfit.Hooks(f(g(h())))`.
+func (c *OutfitClient) Use(hooks ...Hook) {
+	c.hooks.Outfit = append(c.hooks.Outfit, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `user.Intercept(f(g(h())))`.
-func (c *UserClient) Intercept(interceptors ...Interceptor) {
-	c.inters.User = append(c.inters.User, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `outfit.Intercept(f(g(h())))`.
+func (c *OutfitClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Outfit = append(c.inters.Outfit, interceptors...)
 }
 
-// Create returns a builder for creating a User entity.
-func (c *UserClient) Create() *UserCreate {
-	mutation := newUserMutation(c.config, OpCreate)
-	return &UserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Outfit entity.
+func (c *OutfitClient) Create() *OutfitCreate {
+	mutation := newOutfitMutation(c.config, OpCreate)
+	return &OutfitCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of User entities.
-func (c *UserClient) CreateBulk(builders ...*UserCreate) *UserCreateBulk {
-	return &UserCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Outfit entities.
+func (c *OutfitClient) CreateBulk(builders ...*OutfitCreate) *OutfitCreateBulk {
+	return &OutfitCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *UserClient) MapCreateBulk(slice any, setFunc func(*UserCreate, int)) *UserCreateBulk {
+func (c *OutfitClient) MapCreateBulk(slice any, setFunc func(*OutfitCreate, int)) *OutfitCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &UserCreateBulk{err: fmt.Errorf("calling to UserClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &OutfitCreateBulk{err: fmt.Errorf("calling to OutfitClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*UserCreate, rv.Len())
+	builders := make([]*OutfitCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &UserCreateBulk{config: c.config, builders: builders}
+	return &OutfitCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for User.
-func (c *UserClient) Update() *UserUpdate {
-	mutation := newUserMutation(c.config, OpUpdate)
-	return &UserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Outfit.
+func (c *OutfitClient) Update() *OutfitUpdate {
+	mutation := newOutfitMutation(c.config, OpUpdate)
+	return &OutfitUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *UserClient) UpdateOne(u *User) *UserUpdateOne {
-	mutation := newUserMutation(c.config, OpUpdateOne, withUser(u))
-	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *OutfitClient) UpdateOne(o *Outfit) *OutfitUpdateOne {
+	mutation := newOutfitMutation(c.config, OpUpdateOne, withOutfit(o))
+	return &OutfitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UserClient) UpdateOneID(id int) *UserUpdateOne {
-	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
-	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *OutfitClient) UpdateOneID(id uint64) *OutfitUpdateOne {
+	mutation := newOutfitMutation(c.config, OpUpdateOne, withOutfitID(id))
+	return &OutfitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for User.
-func (c *UserClient) Delete() *UserDelete {
-	mutation := newUserMutation(c.config, OpDelete)
-	return &UserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Outfit.
+func (c *OutfitClient) Delete() *OutfitDelete {
+	mutation := newOutfitMutation(c.config, OpDelete)
+	return &OutfitDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *UserClient) DeleteOne(u *User) *UserDeleteOne {
-	return c.DeleteOneID(u.ID)
+func (c *OutfitClient) DeleteOne(o *Outfit) *OutfitDeleteOne {
+	return c.DeleteOneID(o.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserClient) DeleteOneID(id int) *UserDeleteOne {
-	builder := c.Delete().Where(user.ID(id))
+func (c *OutfitClient) DeleteOneID(id uint64) *OutfitDeleteOne {
+	builder := c.Delete().Where(outfit.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &UserDeleteOne{builder}
+	return &OutfitDeleteOne{builder}
 }
 
-// Query returns a query builder for User.
-func (c *UserClient) Query() *UserQuery {
-	return &UserQuery{
+// Query returns a query builder for Outfit.
+func (c *OutfitClient) Query() *OutfitQuery {
+	return &OutfitQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeUser},
+		ctx:    &QueryContext{Type: TypeOutfit},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a User entity by its id.
-func (c *UserClient) Get(ctx context.Context, id int) (*User, error) {
-	return c.Query().Where(user.ID(id)).Only(ctx)
+// Get returns a Outfit entity by its id.
+func (c *OutfitClient) Get(ctx context.Context, id uint64) (*Outfit, error) {
+	return c.Query().Where(outfit.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UserClient) GetX(ctx context.Context, id int) *User {
+func (c *OutfitClient) GetX(ctx context.Context, id uint64) *Outfit {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -464,54 +490,202 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
-// QueryOwner queries the owner edge of a User.
-func (c *UserClient) QueryOwner(u *User) *PasswordTokenQuery {
-	query := (&PasswordTokenClient{config: c.config}).Query()
+// QueryCharacters queries the characters edge of a Outfit.
+func (c *OutfitClient) QueryCharacters(o *Outfit) *CharacterQuery {
+	query := (&CharacterClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
+		id := o.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(passwordtoken.Table, passwordtoken.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, user.OwnerTable, user.OwnerColumn),
+			sqlgraph.From(outfit.Table, outfit.FieldID, id),
+			sqlgraph.To(character.Table, character.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, outfit.CharactersTable, outfit.CharactersColumn),
 		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *UserClient) Hooks() []Hook {
-	hooks := c.hooks.User
-	return append(hooks[:len(hooks):len(hooks)], user.Hooks[:]...)
+func (c *OutfitClient) Hooks() []Hook {
+	return c.hooks.Outfit
 }
 
 // Interceptors returns the client interceptors.
-func (c *UserClient) Interceptors() []Interceptor {
-	return c.inters.User
+func (c *OutfitClient) Interceptors() []Interceptor {
+	return c.inters.Outfit
 }
 
-func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error) {
+func (c *OutfitClient) mutate(ctx context.Context, m *OutfitMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&UserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&OutfitCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&UserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&OutfitUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&OutfitUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&UserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&OutfitDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown User mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Outfit mutation op: %q", m.Op())
+	}
+}
+
+// RibbonClient is a client for the Ribbon schema.
+type RibbonClient struct {
+	config
+}
+
+// NewRibbonClient returns a client for the Ribbon from the given config.
+func NewRibbonClient(c config) *RibbonClient {
+	return &RibbonClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `ribbon.Hooks(f(g(h())))`.
+func (c *RibbonClient) Use(hooks ...Hook) {
+	c.hooks.Ribbon = append(c.hooks.Ribbon, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `ribbon.Intercept(f(g(h())))`.
+func (c *RibbonClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Ribbon = append(c.inters.Ribbon, interceptors...)
+}
+
+// Create returns a builder for creating a Ribbon entity.
+func (c *RibbonClient) Create() *RibbonCreate {
+	mutation := newRibbonMutation(c.config, OpCreate)
+	return &RibbonCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Ribbon entities.
+func (c *RibbonClient) CreateBulk(builders ...*RibbonCreate) *RibbonCreateBulk {
+	return &RibbonCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *RibbonClient) MapCreateBulk(slice any, setFunc func(*RibbonCreate, int)) *RibbonCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &RibbonCreateBulk{err: fmt.Errorf("calling to RibbonClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*RibbonCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &RibbonCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Ribbon.
+func (c *RibbonClient) Update() *RibbonUpdate {
+	mutation := newRibbonMutation(c.config, OpUpdate)
+	return &RibbonUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RibbonClient) UpdateOne(r *Ribbon) *RibbonUpdateOne {
+	mutation := newRibbonMutation(c.config, OpUpdateOne, withRibbon(r))
+	return &RibbonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RibbonClient) UpdateOneID(id int) *RibbonUpdateOne {
+	mutation := newRibbonMutation(c.config, OpUpdateOne, withRibbonID(id))
+	return &RibbonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Ribbon.
+func (c *RibbonClient) Delete() *RibbonDelete {
+	mutation := newRibbonMutation(c.config, OpDelete)
+	return &RibbonDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *RibbonClient) DeleteOne(r *Ribbon) *RibbonDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *RibbonClient) DeleteOneID(id int) *RibbonDeleteOne {
+	builder := c.Delete().Where(ribbon.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RibbonDeleteOne{builder}
+}
+
+// Query returns a query builder for Ribbon.
+func (c *RibbonClient) Query() *RibbonQuery {
+	return &RibbonQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeRibbon},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Ribbon entity by its id.
+func (c *RibbonClient) Get(ctx context.Context, id int) (*Ribbon, error) {
+	return c.Query().Where(ribbon.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RibbonClient) GetX(ctx context.Context, id int) *Ribbon {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryCharacter queries the character edge of a Ribbon.
+func (c *RibbonClient) QueryCharacter(r *Ribbon) *CharacterQuery {
+	query := (&CharacterClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(ribbon.Table, ribbon.FieldID, id),
+			sqlgraph.To(character.Table, character.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, ribbon.CharacterTable, ribbon.CharacterColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *RibbonClient) Hooks() []Hook {
+	return c.hooks.Ribbon
+}
+
+// Interceptors returns the client interceptors.
+func (c *RibbonClient) Interceptors() []Interceptor {
+	return c.inters.Ribbon
+}
+
+func (c *RibbonClient) mutate(ctx context.Context, m *RibbonMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&RibbonCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&RibbonUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&RibbonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&RibbonDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Ribbon mutation op: %q", m.Op())
 	}
 }
 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		PasswordToken, User []ent.Hook
+		Character, Outfit, Ribbon []ent.Hook
 	}
 	inters struct {
-		PasswordToken, User []ent.Interceptor
+		Character, Outfit, Ribbon []ent.Interceptor
 	}
 )

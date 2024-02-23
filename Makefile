@@ -68,7 +68,9 @@ reset:
 .PHONY: run
 run:
 	clear
-	go run cmd/web/main.go
+	# templ generate
+	# go run cmd/web/main.go
+	templ generate --watch --proxy="http://localhost:8000" --cmd="go run cmd/web/main.go"
 
 # Run all tests
 .PHONY: test

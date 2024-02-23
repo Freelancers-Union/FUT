@@ -9,28 +9,40 @@ import (
 	"github.com/mikestefanello/pagoda/ent"
 )
 
-// The PasswordTokenFunc type is an adapter to allow the use of ordinary
-// function as PasswordToken mutator.
-type PasswordTokenFunc func(context.Context, *ent.PasswordTokenMutation) (ent.Value, error)
+// The CharacterFunc type is an adapter to allow the use of ordinary
+// function as Character mutator.
+type CharacterFunc func(context.Context, *ent.CharacterMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f PasswordTokenFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.PasswordTokenMutation); ok {
+func (f CharacterFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CharacterMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PasswordTokenMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CharacterMutation", m)
 }
 
-// The UserFunc type is an adapter to allow the use of ordinary
-// function as User mutator.
-type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
+// The OutfitFunc type is an adapter to allow the use of ordinary
+// function as Outfit mutator.
+type OutfitFunc func(context.Context, *ent.OutfitMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.UserMutation); ok {
+func (f OutfitFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.OutfitMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.OutfitMutation", m)
+}
+
+// The RibbonFunc type is an adapter to allow the use of ordinary
+// function as Ribbon mutator.
+type RibbonFunc func(context.Context, *ent.RibbonMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RibbonFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RibbonMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RibbonMutation", m)
 }
 
 // Condition is a hook condition function.
